@@ -4,16 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .post {
+    .d-none {
+      display: none;
+    }
+
+    section:has(#spinner) {
+      font-size: 3rem;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .product {
       margin-bottom: 5rem;
     }
+
+    .product img {
+      max-height: 250px;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <title>Store</title>
 </head>
 <body>
   <main></main>
-  <template id="post">
-    <article class="post">
+  <section>
+    <i id="spinner" class="fa-solid fa-spinner fa-spin"></i>
+  </section>
+  <template id="product">
+    <article class="product">
       <img src="" width="200" />
       <h2></h2>
       <h3></h3>
@@ -28,15 +46,26 @@
     return new Array(Math.ceil(arr.length / chunkLength)).fill().map(() => arr.splice(0, chunkLength));
   }
 
+  function isElementInViewport (el) {
+    const rect = el.getBoundingClientRect();
+
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+
   function loadProducts(products) {
     console.log(`loading ${products.length} products...`);
 
-    const template = document.getElementById('post');
+    const template = document.getElementById('product');
 
     products.forEach(product => {
       const clone = template.content.cloneNode(true);
       clone.querySelector('img').src = product.thumbnail;
-      clone.querySelector('h2').innerText = product.title;
+      clone.querySelector('h2').innerText = product.id + ' - ' + product.title;
       clone.querySelector('h3').innerText = '$ ' + product.price;
       clone.querySelector('p').innerText = product.description;
 
@@ -52,13 +81,22 @@
     loadProducts(products.shift());
 
     // load more products when user scrolls to the end of the page
-    const triggerLoadProducts = () => {
-      loadProducts(products.shift());
+    const handleScrollEnd = () => {
+      if (isElementInViewport(document.querySelector('.product:last-of-type'))) {
+        // wait a little while to show loading animation
+        setTimeout(() => {
+          loadProducts(products.shift());
+    
+          if (products.length === 0) {
+            document.removeEventListener('scrollend', handleScrollEnd);
+            document.querySelector('#spinner').classList.add('d-none');
+          }
+        }, 2000);
 
-      if (products.length === 0) document.removeEventListener('scrollend', triggerLoadProducts);
-    };
+      };
+    }
 
-    document.addEventListener('scrollend', triggerLoadProducts);
+    document.addEventListener('scrollend', handleScrollEnd);
   })()
 </script>
 </body>
