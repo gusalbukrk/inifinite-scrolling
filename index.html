@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .post {
+      margin-bottom: 5rem;
+    }
+  </style>
+  <title>Store</title>
+</head>
+<body>
+  <main></main>
+  <template id="post">
+    <article class="post">
+      <img src="" width="200" />
+      <h2></h2>
+      <h3></h3>
+      <p></p>
+    </article>
+  </template>
+<script>
+  // util to split array in multiple arrays each with size equal to chunkLength
+  // except last if arr.length is not divisible by chunkLength
+  // https://flaviocopes.com/how-to-divide-array-js/
+  function splitArray(arr, chunkLength) {
+    return new Array(Math.ceil(arr.length / chunkLength)).fill().map(() => arr.splice(0, chunkLength));
+  }
+
+  function loadProducts(products) {
+    console.log(`loading ${products.length} products...`);
+
+    const template = document.getElementById('post');
+
+    products.forEach(product => {
+      const clone = template.content.cloneNode(true);
+      clone.querySelector('img').src = product.thumbnail;
+      clone.querySelector('h2').innerText = product.title;
+      clone.querySelector('h3').innerText = '$ ' + product.price;
+      clone.querySelector('p').innerText = product.description;
+
+      document.querySelector('main').appendChild(clone);
+    });
+  }
+
+  (async () => {
+    const products = splitArray(await (await fetch('./products.json')).json(), 8);
+    console.log(products);
+
+    // load the first 8 products
+    loadProducts(products.shift());
+
+    // load more products when user scrolls to the end of the page
+    const triggerLoadProducts = () => {
+      loadProducts(products.shift());
+
+      if (products.length === 0) document.removeEventListener('scrollend', triggerLoadProducts);
+    };
+
+    document.addEventListener('scrollend', triggerLoadProducts);
+  })()
+</script>
+</body>
+</html>
