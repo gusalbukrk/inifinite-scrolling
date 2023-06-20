@@ -39,6 +39,18 @@
     </article>
   </template>
 <script>
+  const debounce = (fn, delay) => {
+    let timeout;
+
+    return (...args) => {
+      clearTimeout(timeout);
+
+      timeout = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
+
   // util to split array in multiple arrays each with size equal to chunkLength
   // except last if arr.length is not divisible by chunkLength
   // https://flaviocopes.com/how-to-divide-array-js/
@@ -81,22 +93,22 @@
     loadProducts(products.shift());
 
     // load more products when user scrolls to the end of the page
-    const handleScrollEnd = () => {
+    const handleScroll = debounce(() => {
       if (isElementInViewport(document.querySelector('.product:last-of-type'))) {
         // wait a little while to show loading animation
         setTimeout(() => {
           loadProducts(products.shift());
     
           if (products.length === 0) {
-            document.removeEventListener('scrollend', handleScrollEnd);
+            document.removeEventListener('scroll', handleScroll);
             document.querySelector('#spinner').classList.add('d-none');
           }
         }, 2000);
 
       };
-    }
+    }, 500);
 
-    document.addEventListener('scrollend', handleScrollEnd);
+    document.addEventListener('scroll', handleScroll);
   })()
 </script>
 </body>
